@@ -46,9 +46,33 @@ cat(
 
 # --- Filter 2: te vaak onder de detectielimiet (LOD) -----------------------
 # Onder de LOD is het signaal niet te onderscheiden van achtergrondruis
-eiwitten_gefilterd <- eiwitten_genoeg_metingen |>
+eiwitten_meestal_boven_lod <- eiwitten_genoeg_metingen |>
   filter(pct_below_lod <= max_pct_below_lod)
-cat("Na filter 2 (LOD):", nrow(eiwitten_gefilterd), "\n")
+cat("Na filter 2 (LOD):", nrow(eiwitten_meestal_boven_lod), "\n")
+
+# --- Filter 3: mediaan NPX onder mediaan LOD -------------------------------
+# Voor het 'typische' staal ligt het signaal dan onder de ruisgrens, ook al
+# zit pct_below_lod net onder 50%
+eiwitten_signaal_ok <- eiwitten_meestal_boven_lod |>
+  filter(npx_median >= lod_median)
+cat("Na filter 3 (mediaan < LOD):", nrow(eiwitten_signaal_ok), "\n")
+
+# --- Filter 4: zelfde eiwit gemeten in meerdere panels ---------------------
+# CXCL8, IL6 en TNF zitten in alle 4 de panels. We houden per eiwit (assay)
+# de meting met het minst waarden onder de LOD; bij gelijkstand de eerste.
+eiwitten_gefilterd <- eiwitten_signaal_ok |>
+  group_by(assay) |>
+  slice_min(pct_below_lod, n = 1, with_ties = FALSE) |>
+  ungroup() |>
+  mutate(protein = assay) # naam zonder _OID-achtervoegsel, bv. IL6_OID20101
+cat("Na filter 4 (dubbele panels):", nrow(eiwitten_gefilterd), "\n")
+
+# Controle: elk eiwit (assay) en elke olink_id nog maar één keer
+cat(
+  "Dubbele assays over:", sum(duplicated(eiwitten_gefilterd$assay)),
+  "| dubbele olink_id's over:", sum(duplicated(eiwitten_gefilterd$olink_id)),
+  "\n"
+)
 
 # --- Resultaat bewaren in een aparte map, de ruwe data blijft onaangeroerd -
 dir.create(here::here("Data_proteins_gefilterd"), showWarnings = FALSE)
