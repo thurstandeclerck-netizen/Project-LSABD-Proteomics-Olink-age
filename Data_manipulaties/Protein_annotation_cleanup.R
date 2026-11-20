@@ -1,6 +1,6 @@
 # Verwijdert eiwitten van slechte kwaliteit uit de eiwit-annotatie.
 # Input:  Data_Proteins/protein_annotation.csv (wordt NIET aangepast)
-# Output: output/protein_annotation_gefilterd.csv
+# Output: Data_proteins_gefilterd/protein_annotation_gefilterd.csv
 
 library(dplyr)
 library(readr)
@@ -50,11 +50,11 @@ eiwitten_gefilterd <- eiwitten_genoeg_metingen |>
   filter(pct_below_lod <= max_pct_below_lod)
 cat("Na filter 2 (LOD):", nrow(eiwitten_gefilterd), "\n")
 
-# --- Resultaat bewaren in output/, de ruwe data blijft onaangeroerd --------
-dir.create(here::here("output"), showWarnings = FALSE)
+# --- Resultaat bewaren in een aparte map, de ruwe data blijft onaangeroerd -
+dir.create(here::here("Data_proteins_gefilterd"), showWarnings = FALSE)
 write_csv(
   eiwitten_gefilterd,
-  here::here("output", "protein_annotation_gefilterd.csv")
+  here::here("Data_proteins_gefilterd", "protein_annotation_gefilterd.csv")
 )
 
 # Overzicht: hoeveel eiwitten blijven er per panel over?
